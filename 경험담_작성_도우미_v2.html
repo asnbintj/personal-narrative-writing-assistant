@@ -1,0 +1,246 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+#app{
+  display:flex;flex-direction:column;
+  min-height:520px;max-height:600px;
+  background:var(--surface-2);
+  border:0.5px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  width:100%;
+}
+#hdr{
+  padding:12px 14px;
+  border-bottom:0.5px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface-2);flex-shrink:0;
+}
+#hdr-ic{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--bg-accent);display:flex;
+  align-items:center;justify-content:center;
+  color:var(--text-accent);font-size:15px;flex-shrink:0;
+}
+#hdr-title{font-size:14px;font-weight:500;color:var(--text-primary);}
+#hdr-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+#prog{height:3px;background:var(--surface-1);flex-shrink:0;}
+#prog-fill{height:100%;background:var(--fill-accent);transition:width 0.4s ease;width:0%;}
+#chat{
+  flex:1;overflow-y:auto;
+  padding:12px;
+  display:flex;flex-direction:column;gap:8px;
+  -webkit-overflow-scrolling:touch;
+}
+.bwrap{display:flex;flex-direction:column;}
+.bwrap.u{align-items:flex-end;}
+.bwrap.b{align-items:flex-start;}
+.tag{
+  display:inline-block;font-size:11px;font-weight:500;
+  color:var(--text-accent);background:var(--bg-accent);
+  border-radius:4px;padding:1px 7px;margin-bottom:4px;
+}
+.bub{
+  max-width:86%;padding:9px 12px;border-radius:12px;
+  font-size:13px;line-height:1.6;word-break:break-word;
+}
+.bub.b{
+  background:var(--surface-1);border:0.5px solid var(--border);
+  color:var(--text-primary);border-bottom-left-radius:4px;
+}
+.bub.u{
+  background:var(--fill-accent);color:var(--on-accent);
+  border-bottom-right-radius:4px;
+}
+.bub.res{
+  max-width:100%;background:var(--surface-1);
+  border:0.5px solid var(--border-accent);
+  color:var(--text-primary);font-size:12px;line-height:1.9;
+  white-space:pre-wrap;font-family:var(--font-mono);
+}
+.hint{font-size:11px;color:var(--text-muted);margin-top:3px;}
+#iarea{
+  padding:10px 12px;border-top:0.5px solid var(--border);
+  background:var(--surface-2);display:flex;gap:8px;
+  align-items:flex-end;flex-shrink:0;
+}
+#inp{
+  flex:1;resize:none;
+  min-height:40px;max-height:96px;
+  padding:10px 12px;font-size:16px;
+  font-family:var(--font-sans);
+  border:0.5px solid var(--border-strong);
+  border-radius:var(--radius);
+  background:var(--surface-2);
+  color:var(--text-primary);outline:none;line-height:1.4;
+  -webkit-appearance:none;
+}
+#inp:focus{border-color:var(--border-accent);}
+#sbtn{
+  width:40px;height:40px;border-radius:var(--radius);
+  border:none;background:var(--fill-accent);
+  color:var(--on-accent);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;transition:opacity 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#sbtn:active{opacity:0.75;}
+#sbtn:disabled{opacity:0.35;cursor:default;}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.cbtn{
+  padding:9px 14px;font-size:13px;
+  border:0.5px solid var(--border-strong);
+  border-radius:var(--radius);background:var(--surface-2);
+  color:var(--text-primary);cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:background 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;min-height:40px;
+}
+.cbtn:active{background:var(--surface-1);}
+.cbtn.ok{color:var(--text-success);border-color:var(--border-success);}
+.rbtn{
+  padding:9px 14px;font-size:13px;
+  border:0.5px solid var(--border);
+  border-radius:var(--radius);background:transparent;
+  color:var(--text-secondary);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;min-height:40px;
+}
+.rbtn:active{background:var(--surface-1);}
+</style>
+
+<h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">순특공 경험담 AI 작성 도우미</h2>
+
+<div id="app">
+  <div id="hdr">
+    <div id="hdr-ic"><i class="ti ti-message-2" aria-hidden="true"></i></div>
+    <div>
+      <div id="hdr-title">경험담 작성 도우미</div>
+      <div id="hdr-sub">대화하듯 편하게 답해 주세요</div>
+    </div>
+  </div>
+  <div id="prog"><div id="prog-fill"></div></div>
+  <div id="chat"></div>
+  <div id="iarea">
+    <textarea id="inp" placeholder="여기에 입력하세요..." rows="1"></textarea>
+    <button id="sbtn" aria-label="보내기"><i class="ti ti-send" aria-hidden="true"></i></button>
+  </div>
+</div>
+
+<script>
+const STEPS=[
+  {key:'date',label:'1. 일자',q:'안녕하세요! 경험담 작성을 도와드릴게요.\n\n언제 있었던 경험인가요?',ph:'예: 2026년 6월 20일 / 오늘',skip:false},
+  {key:'cong',label:'2. 회중',q:'어느 회중 소속이세요?\n비공개라면 "없음"이라고 적어 주세요.',ph:'예: 안성남부 / 없음',skip:true},
+  {key:'name',label:'3. 이름',q:'이름을 남겨 주시겠어요?\n익명을 원하시면 "익명"이라고 입력하세요.',ph:'예: 홍길동 / 익명',skip:true},
+  {key:'place',label:'4. 장소',q:'어디서 있었던 경험인가요?',ph:'예: 버스정류장 / 공원 앞',skip:false},
+  {key:'sit',label:'5. 상황',q:'어떤 상황이었나요?\n대상이 누구였고, 어떻게 대화가 시작됐는지 간단히 적어 주세요.',ph:'예: 버스를 기다리던 20대 여성과 눈이 마주쳐 대화 시작',skip:false},
+  {key:'resp',label:'6. 응대(구체적)',q:'어떻게 대화를 이어가셨나요?\n\n어떻게 말을 걸었는지, 어떤 내용을 나눴는지, 상대 반응은 어땠는지 자유롭게 적어 주세요. 짧아도 괜찮아요.',ph:'예: "가방 인형 귀엽네요"로 시작해 jw.org 카드 드렸더니 감사히 받으심',skip:false},
+  {key:'feel',label:'7. 느낀점',q:'이번 경험에서 느낀 점이 있으신가요?\n한 줄이라도 좋아요. 없으면 "없음"이라고 입력하세요.',ph:'예: 작은 관심사로도 자연스럽게 이어질 수 있다고 느꼈어요',skip:true},
+];
+
+let step=0,ans={},finished=false;
+const chat=document.getElementById('chat');
+const inp=document.getElementById('inp');
+const sbtn=document.getElementById('sbtn');
+const pf=document.getElementById('prog-fill');
+
+function scroll(){setTimeout(()=>{chat.scrollTop=chat.scrollHeight;},60);}
+function pct(){pf.style.width=(step/STEPS.length*100)+'%';}
+
+function addBot(text,label){
+  const w=document.createElement('div');
+  w.className='bwrap b';
+  if(label){const t=document.createElement('div');t.className='tag';t.textContent=label;w.appendChild(t);}
+  const b=document.createElement('div');b.className='bub b';b.textContent=text;w.appendChild(b);
+  chat.appendChild(w);scroll();
+}
+
+function addUser(text){
+  const w=document.createElement('div');w.className='bwrap u';
+  const b=document.createElement('div');b.className='bub u';b.textContent=text;
+  w.appendChild(b);chat.appendChild(w);scroll();
+}
+
+function addResult(text){
+  const w=document.createElement('div');w.className='bwrap b';w.style.width='100%';
+  const t=document.createElement('div');t.className='tag';t.textContent='완성된 경험담';w.appendChild(t);
+  const b=document.createElement('div');b.className='bub res';b.textContent=text;w.appendChild(b);
+  const row=document.createElement('div');row.className='row';
+  const cp=document.createElement('button');cp.className='cbtn';
+  cp.innerHTML='<i class="ti ti-copy" aria-hidden="true"></i>복사하기';
+  cp.onclick=()=>{
+    navigator.clipboard.writeText(text).then(()=>{
+      cp.className='cbtn ok';cp.innerHTML='<i class="ti ti-check" aria-hidden="true"></i>복사됨!';
+      setTimeout(()=>{cp.className='cbtn';cp.innerHTML='<i class="ti ti-copy" aria-hidden="true"></i>복사하기';},2000);
+    }).catch(()=>{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+      cp.className='cbtn ok';cp.innerHTML='<i class="ti ti-check" aria-hidden="true"></i>복사됨!';
+      setTimeout(()=>{cp.className='cbtn';cp.innerHTML='<i class="ti ti-copy" aria-hidden="true"></i>복사하기';},2000);
+    });
+  };
+  row.appendChild(cp);
+  const rb=document.createElement('button');rb.className='rbtn';rb.textContent='새 경험담 작성';
+  rb.onclick=restart;row.appendChild(rb);
+  w.appendChild(row);chat.appendChild(w);scroll();
+}
+
+function buildResult(){
+  return STEPS.map(s=>`${s.label} : ${ans[s.key]||'-'}`).join('\n');
+}
+
+function askStep(i){
+  if(i>=STEPS.length){finish();return;}
+  const s=STEPS[i];
+  const w=document.createElement('div');w.className='bwrap b';
+  const t=document.createElement('div');t.className='tag';t.textContent=s.label;w.appendChild(t);
+  const b=document.createElement('div');b.className='bub b';b.textContent=s.q;w.appendChild(b);
+  if(s.skip){const h=document.createElement('div');h.className='hint';h.textContent='비워두려면 "없음" 또는 "익명" 입력';w.appendChild(h);}
+  chat.appendChild(w);
+  inp.placeholder=s.ph||'여기에 입력하세요...';
+  scroll();pct();
+}
+
+function send(){
+  if(finished)return;
+  const v=inp.value.trim();if(!v)return;
+  addUser(v);
+  ans[STEPS[step].key]=v;
+  inp.value='';inp.style.height='auto';
+  step++;
+  setTimeout(()=>{
+    if(step<STEPS.length)askStep(step);
+    else finish();
+  },300);
+}
+
+function finish(){
+  finished=true;pf.style.width='100%';
+  sbtn.disabled=true;inp.disabled=true;inp.placeholder='작성 완료';
+  setTimeout(()=>{addBot('모든 항목을 작성해 주셨어요! 아래 경험담을 복사해서 담당자에게 보내 주세요.');},200);
+  setTimeout(()=>{addResult(buildResult());},700);
+}
+
+function restart(){
+  step=0;ans={};finished=false;
+  chat.innerHTML='';inp.disabled=false;inp.value='';
+  sbtn.disabled=false;pf.style.width='0%';
+  setTimeout(()=>askStep(0),200);
+}
+
+sbtn.addEventListener('click',send);
+sbtn.addEventListener('touchend',function(e){e.preventDefault();send();});
+
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+inp.addEventListener('input',()=>{
+  inp.style.height='auto';
+  inp.style.height=Math.min(inp.scrollHeight,96)+'px';
+});
+
+setTimeout(()=>askStep(0),300);
+</script>
